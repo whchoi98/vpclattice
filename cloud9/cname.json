@@ -1,0 +1,17 @@
+{
+  "Changes": [
+      {
+          "Action": "CREATE",
+          "ResourceRecordSet": {
+              "Name": "$SVC_FQDN",
+              "Type": "CNAME",
+              "TTL": 60,
+              "ResourceRecords": [
+                  {
+                      "Value": "$LATTICE_FQDN"
+                  }
+              ]
+          }
+      }
+  ]
+}

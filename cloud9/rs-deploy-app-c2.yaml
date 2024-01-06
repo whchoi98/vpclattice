@@ -1,0 +1,456 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    app.kubernetes.io/created-by: retail-store-sample
+  name: checkout
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: orders
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: rabbitmq
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: checkout
+  namespace: checkout
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: orders
+  namespace: orders
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: rabbitmq
+  namespace: rabbitmq
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: checkout
+  namespace: checkout
+  labels:
+    app.kubernetes.io/created-by: retail-store-sample
+data:
+  ENDPOINTS_ORDERS: http://orders.orders.svc:80
+  REDIS_URL: redis://checkout-redis:6379
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: orders
+  namespace: orders
+  labels:
+    app.kubernetes.io/created-by: retail-store-sample
+data:
+  SPRING_PROFILES_ACTIVE: mysql,rabbitmq
+  SPRING_RABBITMQ_HOST: rabbitmq.rabbitmq.svc
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+ name: rabbitmq
+ namespace: rabbitmq
+ labels:
+   app.kubernetes.io/created-by: retail-store-sample
+data: null
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: orders-db
+  namespace: orders
+  labels:
+    app.kubernetes.io/created-by: retail-store-sample
+data:
+  name: b3JkZXJz
+  password: ZGVmYXVsdF9wYXNzd29yZA==
+  url: amRiYzptYXJpYWRiOi8vb3JkZXJzLW15c3FsOjMzMDYvb3JkZXJz
+  username: b3JkZXJzX3VzZXI=
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: checkout
+  namespace: checkout
+spec:
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: http
+  selector:
+    app.kubernetes.io/component: service
+    app.kubernetes.io/instance: checkout
+    app.kubernetes.io/name: checkout
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: checkout-redis
+  namespace: checkout
+spec:
+  ports:
+  - name: redis
+    port: 6379
+    protocol: TCP
+    targetPort: redis
+  selector:
+    app.kubernetes.io/component: redis
+    app.kubernetes.io/instance: checkout
+    app.kubernetes.io/name: checkout
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: orders
+  namespace: orders
+spec:
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: http
+  selector:
+    app.kubernetes.io/component: service
+    app.kubernetes.io/instance: orders
+    app.kubernetes.io/name: orders
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: orders-mysql
+  namespace: orders
+spec:
+  ports:
+  - name: mysql
+    port: 3306
+    protocol: TCP
+    targetPort: mysql
+  selector:
+    app.kubernetes.io/component: mysql
+    app.kubernetes.io/instance: orders
+    app.kubernetes.io/name: orders
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rabbitmq
+  namespace: rabbitmq
+spec:
+  ports:
+  - name: amqp
+    port: 5672
+    protocol: TCP
+    targetPort: amqp
+  - name: http
+    port: 15672
+    protocol: TCP
+    targetPort: http
+  selector:
+    app.kubernetes.io/component: rabbitmq
+    app.kubernetes.io/instance: rabbitmq
+    app.kubernetes.io/name: rabbitmq
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: checkout
+  namespace: checkout
+  labels:
+    app.kubernetes.io/created-by: retail-store-sample
+    app.kubernetes.io/type: app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: service
+      app.kubernetes.io/instance: checkout
+      app.kubernetes.io/name: checkout
+  template:
+    metadata:
+      annotations:
+        prometheus.io/path: /metrics
+        prometheus.io/port: "8080"
+        prometheus.io/scrape: "true"
+      labels:
+        app.kubernetes.io/component: service
+        app.kubernetes.io/created-by: retail-store-sample
+        app.kubernetes.io/instance: checkout
+        app.kubernetes.io/name: checkout
+    spec:
+      containers:
+      - envFrom:
+        - configMapRef:
+            name: checkout
+        image: public.ecr.aws/aws-containers/retail-store-sample-checkout:0.2.0
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 3
+        name: checkout
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        resources:
+          limits:
+            memory: 256Mi
+          requests:
+            cpu: 128m
+            memory: 256Mi
+        securityContext:
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 1000
+        volumeMounts:
+        - mountPath: /tmp
+          name: tmp-volume
+      securityContext:
+        fsGroup: 1000
+      serviceAccountName: checkout
+      volumes:
+      - emptyDir:
+          medium: Memory
+        name: tmp-volume
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: checkout-redis
+  namespace: checkout
+  labels:
+    app.kubernetes.io/created-by: retail-store-sample
+    app.kubernetes.io/team: database
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: redis
+      app.kubernetes.io/instance: checkout
+      app.kubernetes.io/name: checkout
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: redis
+        app.kubernetes.io/created-by: retail-store-sample
+        app.kubernetes.io/instance: checkout
+        app.kubernetes.io/name: checkout
+        app.kubernetes.io/team: database
+    spec:
+      containers:
+      - image: redis:6.0-alpine
+        imagePullPolicy: IfNotPresent
+        name: redis
+        ports:
+        - containerPort: 6379
+          name: redis
+          protocol: TCP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orders
+  namespace: orders
+  labels:
+    app.kubernetes.io/created-by: retail-store-sample
+    app.kubernetes.io/type: app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: service
+      app.kubernetes.io/instance: orders
+      app.kubernetes.io/name: orders
+  template:
+    metadata:
+      annotations:
+        prometheus.io/path: /actuator/prometheus
+        prometheus.io/port: "8080"
+        prometheus.io/scrape: "true"
+      labels:
+        app.kubernetes.io/component: service
+        app.kubernetes.io/instance: orders
+        app.kubernetes.io/name: orders
+    spec:
+      containers:
+      - env:
+        - name: JAVA_OPTS
+          value: -XX:MaxRAMPercentage=75.0 -Djava.security.egd=file:/dev/urandom
+        - name: SPRING_DATASOURCE_WRITER_URL
+          valueFrom:
+            secretKeyRef:
+              key: url
+              name: orders-db
+        - name: SPRING_DATASOURCE_WRITER_USERNAME
+          valueFrom:
+            secretKeyRef:
+              key: username
+              name: orders-db
+        - name: SPRING_DATASOURCE_WRITER_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: password
+              name: orders-db
+        - name: SPRING_DATASOURCE_READER_URL
+          valueFrom:
+            secretKeyRef:
+              key: url
+              name: orders-db
+        - name: SPRING_DATASOURCE_READER_USERNAME
+          valueFrom:
+            secretKeyRef:
+              key: username
+              name: orders-db
+        - name: SPRING_DATASOURCE_READER_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: password
+              name: orders-db
+        envFrom:
+        - configMapRef:
+            name: orders
+        image: public.ecr.aws/aws-containers/retail-store-sample-orders:0.2.0
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: 8080
+          initialDelaySeconds: 45
+          periodSeconds: 3
+        name: orders
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: 8080
+          periodSeconds: 5
+          successThreshold: 3
+        resources:
+          limits:
+            memory: 512Mi
+          requests:
+            cpu: 128m
+            memory: 512Mi
+        securityContext:
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 1000
+        volumeMounts:
+        - mountPath: /tmp
+          name: tmp-volume
+      securityContext:
+        fsGroup: 1000
+      serviceAccountName: orders
+      volumes:
+      - emptyDir:
+          medium: Memory
+        name: tmp-volume
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orders-mysql
+  namespace: orders
+  labels:
+    app.kubernetes.io/created-by: retail-store-sample
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: mysql
+      app.kubernetes.io/instance: orders
+      app.kubernetes.io/name: orders
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: mysql
+        app.kubernetes.io/instance: orders
+        app.kubernetes.io/name: orders
+    spec:
+      containers:
+      - env:
+        - name: MYSQL_ROOT_PASSWORD
+          value: my-secret-pw
+        - name: MYSQL_USER
+          valueFrom:
+            secretKeyRef:
+              key: username
+              name: orders-db
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: password
+              name: orders-db
+        - name: MYSQL_DATABASE
+          valueFrom:
+            secretKeyRef:
+              key: name
+              name: orders-db
+        image: mysql:5.7
+        imagePullPolicy: IfNotPresent
+        name: mysql
+        ports:
+        - containerPort: 3306
+          name: mysql
+          protocol: TCP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rabbitmq
+  namespace: rabbitmq
+  labels:
+    app.kubernetes.io/created-by: retail-store-sample
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: rabbitmq
+      app.kubernetes.io/instance: rabbitmq
+      app.kubernetes.io/name: rabbitmq
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: rabbitmq
+        app.kubernetes.io/instance: rabbitmq
+        app.kubernetes.io/name: rabbitmq
+    spec:
+      containers:
+      - image: rabbitmq:3-management
+        imagePullPolicy: IfNotPresent
+        name: rabbitmq
+        ports:
+        - containerPort: 5672
+          name: amqp
+          protocol: TCP
+        - containerPort: 15672
+          name: http
+          protocol: TCP
