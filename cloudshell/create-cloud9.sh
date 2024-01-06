@@ -1,11 +1,8 @@
 #!/bin/bash
-
 C9_IAM_ROLE_NAME="C9admin"
 C9_IAM_Profile_NAME="C9admin"
 C9_NAME="MyCloud9"
 C9_INSTANCE_TYPE="m5.xlarge"
-
-source ./helper.sh
 
 aws iam create-role --path / \
 --role-name ${C9_IAM_ROLE_NAME} \
@@ -31,5 +28,3 @@ aws ec2 associate-iam-instance-profile --instance-id "${CLOUD9_EC2_ID}" --iam-in
 
 # Disable - AWS Managed temporary credentials
 aws cloud9 update-environment --environment-id "${CLOUD9_EC2}" --managed-credentials-action DISABLE
-
-log_text "Success" "Cloud9 Environment created successfully..."
