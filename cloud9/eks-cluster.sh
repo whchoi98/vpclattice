@@ -2,14 +2,13 @@
 
 source ./helper.sh
 
-CLUSTER_NAME=$1
-VPC_FILTER=$2
+CLUSTER_NAME=c1
 NODE_INSTANCE_TYPE="m5.large"
-EKS_VERSION="1.24"
+EKS_VERSION="1.25"
 
 AZS=($(aws ec2 describe-availability-zones --query 'AvailabilityZones[].ZoneName' --output text --region "$AWS_REGION"))
 
-CLUSTER_VPC_ID=$(aws ec2 describe-vpcs --region "$AWS_REGION"  --filters "${VPC_FILTER}" | jq -r '.Vpcs[].VpcId')
+CLUSTER_VPC_ID=$(aws ec2 describe-vpcs --filters Name=tag:Name,"Values=LatticeWorkshop Clients VPC" | jq -r '.Vpcs[].VpcId')
 
 echo $CLUSTER_VPC_ID
 
@@ -72,16 +71,22 @@ vpc:
       ${AZS[2]}:
           id: ${PRIVATE_SUBNETS[2]}
 
+cloudWatch:
+    clusterLogging:
+        enableTypes: ["api", "audit", "authenticator", "controllerManager", "scheduler"]
 iam:
   withOIDC: true
-
 addons:
 - name: vpc-cni
-  resolveConflicts: overwrite
   attachPolicyARNs:
     - arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy
 - name: coredns
+  version: latest
 - name: kube-proxy
+  version: latest
+- name: aws-ebs-csi-driver
+  wellKnownPolicies:
+    ebsCSIController: true
 
 managedNodeGroups:
 - name: nodegroup
@@ -116,13 +121,6 @@ log_text "Success" "Completed EKS cluster setup..."
 ROLE_ARN=$(aws iam get-role --role-name WSParticipantRole --query Role.Arn --output text) || true
 
 eksctl create iamidentitymapping --cluster ${CLUSTER_NAME} --arn ${ROLE_ARN} --group system:masters --username admin || true
-
-
-C9_IDS=$(aws cloud9 list-environments | jq -r '.environmentIds | join(" ")') || true
-
-CLOUD9_EC2=$(aws cloud9 describe-environments --environment-ids "${C9_IDS}" | jq -r '.environments[] | select(.name == "LatticeCloud9") | .id') || true
-
-aws cloud9 update-environment --environment-id "${CLOUD9_EC2}" --managed-credentials-action DISABLE || true
 
 kubectl config get-contexts -o name
 
