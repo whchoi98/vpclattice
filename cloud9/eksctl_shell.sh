@@ -3,7 +3,7 @@
 # eksctl yaml 실행
 
 source ~/.bash_profile
-cat << EOF > ~/environment/myeks/eksworkshop.yaml
+cat << EOF > ~/environment/vpclattice/cloud9/vpclattice_eks.yaml
 ---
 apiVersion: eksctl.io/v1alpha5
 kind: ClusterConfig
