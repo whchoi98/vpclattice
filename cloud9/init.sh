@@ -76,5 +76,30 @@ echo "------------------------------------------------------"
 curl "https://s3.amazonaws.com/session-manager-downloads/plugin/latest/linux_64bit/session-manager-plugin.rpm" -o "session-manager-plugin.rpm"
 sudo yum install -y session-manager-plugin.rpm
 
+echo "eksctl install"
+echo "------------------------------------------------------"
+# eksctl 설정 
+curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+sudo mv /tmp/eksctl /usr/local/bin
+# eksctl 자동완성 - bash
+. <(eksctl completion bash)
+eksctl version
 
-log_text "Success" "Installed of CLI tools successful"
+echo "Downloaded and installed helm v3.13.2"
+
+echo "------------------------------------------------------"
+
+# curl -sSL https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
+
+wget https://get.helm.sh/helm-v3.13.2-linux-amd64.tar.gz
+tar -zxvf helm-v3.13.2-linux-amd64.tar.gz
+sudo cp linux-amd64/helm /usr/local/bin/helm
+
+helm version --short
+
+helm repo add stable https://charts.helm.sh/stable
+helm repo add bitnami https://charts.bitnami.com/bitnami
+helm repo update
+
+
+
