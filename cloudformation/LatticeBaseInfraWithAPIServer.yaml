@@ -232,10 +232,12 @@ Resources:
       CidrBlock: !Ref VPCASubnet1CIDR
       MapPublicIpOnLaunch: true
       Tags:
-        - Key: Name
-          Value: !Sub ${EnvironmentName} Public Subnet Client
-        - Key: platform:visibility
-          Value: public
+      - Key: Name
+        Value: !Sub "${EnvironmentName}-PublicSubnet01"
+      - Key: kubernetes.io/role/elb
+        Value: 1
+      - Key: platform:visibility
+        Value: public
 
   VPCAPublicSubnetClient2:
     Type: AWS::EC2::Subnet
@@ -245,10 +247,12 @@ Resources:
       CidrBlock: !Ref VPCASubnet2CIDR
       MapPublicIpOnLaunch: true
       Tags:
-        - Key: Name
-          Value: !Sub ${EnvironmentName} Public Subnet Client
-        - Key: platform:visibility
-          Value: public
+      - Key: Name
+        Value: !Sub "${EnvironmentName}-PublicSubnet02"
+      - Key: kubernetes.io/role/elb
+        Value: 1
+      - Key: platform:visibility
+        Value: public
 
   VPCAPublicSubnetClient3:
     Type: AWS::EC2::Subnet
@@ -258,11 +262,12 @@ Resources:
       CidrBlock: !Ref VPCASubnet3CIDR
       MapPublicIpOnLaunch: true
       Tags:
-        - Key: Name
-          Value: !Sub ${EnvironmentName} Public Subnet Client
-        - Key: platform:visibility
-          Value: public
-
+      - Key: Name
+        Value: !Sub "${EnvironmentName}-PublicSubnet03"
+      - Key: kubernetes.io/role/elb
+        Value: 1
+      - Key: platform:visibility
+        Value: public
 
   VPCAPrivateSubnetClient1:
     Type: 'AWS::EC2::Subnet'
@@ -273,7 +278,9 @@ Resources:
       CidrBlock: !Ref VPCASubnet4CIDR
       Tags:
       - Key: Name
-        Value: !Sub ${EnvironmentName} Private Subnet Client
+        Value: !Sub "${EnvironmentName}-PrivateSubnet01"
+      - Key: kubernetes.io/role/internal-elb
+        Value: 1
       - Key: platform:visibility
         Value: private
 
@@ -286,7 +293,9 @@ Resources:
       CidrBlock: !Ref VPCASubnet5CIDR
       Tags:
       - Key: Name
-        Value: !Sub ${EnvironmentName} Private Subnet Client
+        Value: !Sub "çPrivateSubnet02"
+      - Key: kubernetes.io/role/internal-elb
+        Value: 1
       - Key: platform:visibility
         Value: private
 
@@ -299,7 +308,9 @@ Resources:
       CidrBlock: !Ref VPCASubnet6CIDR
       Tags:
       - Key: Name
-        Value: !Sub ${EnvironmentName} Private Subnet Client
+        Value: !Sub "${EnvironmentName}-PrivateSubnet03"
+      - Key: kubernetes.io/role/internal-elb
+        Value: 1
       - Key: platform:visibility
         Value: private
 
