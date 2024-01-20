@@ -3,6 +3,7 @@
 source ./helper.sh
 
 echo "Start Installation and Configuration of Cloud9"
+cd ~
 
 #sudo yum -y update
 sudo yum -y update --skip-broken
@@ -25,6 +26,7 @@ sudo mv ./yq_linux_amd64 /usr/local/bin/yq
 yq --version
 
 echo "------------------------------------------------------"
+
 cd ~
 curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.25.12/bin/linux/amd64/kubectl
 chmod +x ./kubectl
