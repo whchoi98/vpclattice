@@ -1,50 +1,9 @@
 #!/bin/bash
 
 #source ./helper.sh
+source ~/.bash_profile
 
-CLUSTER2_NAME=c2
-NODE_INSTANCE_TYPE="m5.large"
-EKS_VERSION="1.25"
-
-AZS=($(aws ec2 describe-availability-zones --query 'AvailabilityZones[].ZoneName' --output text --region "$AWS_REGION"))
-
-CLUSTER_VPC_ID=$(aws ec2 describe-vpcs --filters Name=tag:Name,"Values=LatticeWorkshop Clients VPC" | jq -r '.Vpcs[].VpcId')
-
-echo $CLUSTER_VPC_ID
-export CLUSTER_VPC_ID=$(aws ec2 describe-vpcs --filters Name=tag:Name,"Values=LatticeWorkshop Clients VPC" | jq -r '.Vpcs[].VpcId')
-export ACCOUNT_ID=$(aws sts get-caller-identity --region ap-northeast-2 --output text --query Account)
-export PUBLIC_SUBNETS_LIST=($(aws ec2 describe-subnets --filters Name=vpc-id,Values=$CLUSTER_VPC_ID --query 'Subnets[?MapPublicIpOnLaunch==`false`].{AZ: AvailabilityZone, SUBNET: SubnetId}' --output json))
-export PRIVATE_SUBNETS_LIST=($(aws ec2 describe-subnets --filters Name=vpc-id,Values=$CLUSTER_VPC_ID --query 'Subnets[?MapPublicIpOnLaunch==`true`].{AZ: AvailabilityZone, SUBNET: SubnetId}' --output json))
-
-echo "Identified Public subnets ${PUBLIC_SUBNETS_LIST[@]}"
-echo "Identified Private subnets ${PRIVATE_SUBNETS_LIST[@]}"
-
-AZ1=${AZS[0]}
-AZ2=${AZS[1]}
-AZ3=${AZS[2]}
-
-PUBLIC_SUBNETS[0]=$(echo ${PUBLIC_SUBNETS_LIST[@]} | jq -r --arg AZ "$AZ1" '.[] | select(.AZ == $AZ ).SUBNET')
-PUBLIC_SUBNETS[1]=$(echo ${PUBLIC_SUBNETS_LIST[@]} | jq -r --arg AZ "$AZ2" '.[] | select(.AZ == $AZ ).SUBNET')
-PUBLIC_SUBNETS[2]=$(echo ${PUBLIC_SUBNETS_LIST[@]} | jq -r --arg AZ "$AZ3" '.[] | select(.AZ == $AZ ).SUBNET')
-
-PRIVATE_SUBNETS[0]=$(echo ${PRIVATE_SUBNETS_LIST[@]} | jq -r --arg AZ "$AZ1" '.[] | select(.AZ == $AZ ).SUBNET')
-PRIVATE_SUBNETS[1]=$(echo ${PRIVATE_SUBNETS_LIST[@]} | jq -r --arg AZ "$AZ2" '.[] | select(.AZ == $AZ ).SUBNET')
-PRIVATE_SUBNETS[2]=$(echo ${PRIVATE_SUBNETS_LIST[@]} | jq -r --arg AZ "$AZ3" '.[] | select(.AZ == $AZ ).SUBNET')
-
-echo ${PUBLIC_SUBNETS[*]}
-echo ${PRIVATE_SUBNETS[*]}
-
-aws ec2 create-tags --resources ${PUBLIC_SUBNETS[0]} --tags Key=kubernetes.io/cluster/${CLUSTER2_NAME},Value=shared Key=kubernetes.io/role/elb,Value=1 Key=alpha.eksctl.io/cluster-name,Value=${CLUSTER2_NAME}
-aws ec2 create-tags --resources ${PUBLIC_SUBNETS[1]} --tags Key=kubernetes.io/cluster/${CLUSTER2_NAME},Value=shared Key=kubernetes.io/role/elb,Value=1 Key=alpha.eksctl.io/cluster-name,Value=${CLUSTER2_NAME}
-aws ec2 create-tags --resources ${PUBLIC_SUBNETS[2]} --tags Key=kubernetes.io/cluster/${CLUSTER2_NAME},Value=shared Key=kubernetes.io/role/elb,Value=1 Key=alpha.eksctl.io/cluster-name,Value=${CLUSTER2_NAME}
-
-aws ec2 create-tags --resources ${PRIVATE_SUBNETS[0]} --tags Key=kubernetes.io/cluster/${CLUSTER2_NAME},Value=shared Key=kubernetes.io/role/internal-elb,Value=1 Key=alpha.eksctl.io/cluster-name,Value=${CLUSTER2_NAME}
-aws ec2 create-tags --resources ${PRIVATE_SUBNETS[1]} --tags Key=kubernetes.io/cluster/${CLUSTER2_NAME},Value=shared Key=kubernetes.io/role/internal-elb,Value=1 Key=alpha.eksctl.io/cluster-name,Value=${CLUSTER2_NAME}
-aws ec2 create-tags --resources ${PRIVATE_SUBNETS[2]} --tags Key=kubernetes.io/cluster/${CLUSTER2_NAME},Value=shared Key=kubernetes.io/role/internal-elb,Value=1 Key=alpha.eksctl.io/cluster-name,Value=${CLUSTER2_NAME}
-
-echo "Completed adding EKS tags to be make subnets compliant"
-
-cat << EOF > eksworkshop.yaml
+cat << EOF > ~/environment/vpclattice/cloud9/lattice_eks02.yaml
 ---
 apiVersion: eksctl.io/v1alpha5
 kind: ClusterConfig
@@ -54,23 +13,29 @@ metadata:
   region: ${AWS_REGION}
   version: "${EKS_VERSION}"
 
-vpc:
+vpc: 
   id: ${CLUSTER_VPC_ID}
   subnets:
     public:
-      ${AZS[0]}:
-          id: ${PUBLIC_SUBNETS[0]}
-      ${AZS[1]}:
-          id: ${PUBLIC_SUBNETS[1]}
-      ${AZS[2]}:
-          id: ${PUBLIC_SUBNETS[2]}
+      PublicSubnet01:
+        az: ${AWS_REGION}a
+        id: ${CLIENTS_PublicSubnet01}
+      PublicSubnet02:
+        az: ${AWS_REGION}b
+        id: ${CLIENTS_PublicSubnet02}
+      PublicSubnet03:
+        az: ${AWS_REGION}c
+        id: ${CLIENTS_PublicSubnet03}
     private:
-      ${AZS[0]}:
-          id: ${PRIVATE_SUBNETS[0]}
-      ${AZS[1]}:
-          id: ${PRIVATE_SUBNETS[1]}
-      ${AZS[2]}:
-          id: ${PRIVATE_SUBNETS[2]}
+      PrivateSubnet01:
+        az: ${AWS_REGION}a
+        id: ${CLIENTS_PrivateSubnet01}
+      PrivateSubnet02:
+        az: ${AWS_REGION}b
+        id: ${CLIENTS_PrivateSubnet02}
+      PrivateSubnet03:
+        az: ${AWS_REGION}c
+        id: ${CLIENTS_PrivateSubnet03}
 
 cloudWatch:
     clusterLogging:
@@ -91,44 +56,34 @@ addons:
 
 managedNodeGroups:
 - name: nodegroup
-  minSize: 2
+  minSize: 3
   maxSize: 3
   desiredCapacity: 3
   instanceType: ${NODE_INSTANCE_TYPE}
-  #volumeSize: 20
+  subnets:
+    - ${CLIENTS_PrivateSubnet01}
+    - ${CLIENTS_PrivateSubnet02}
+    - ${CLIENTS_PrivateSubnet03}
+  volumeSize: 20
+  volumeType: gp3
   privateNetworking: true
   ssh:
     enableSsm: true
-  labels: {role: workshop}
+  labels:
+    nodegroup-type: "${private_mgmd_node}"
   tags:
     nodegroup-role: workshop
+  iam:
+    attachPolicyARNs:
+    withAddonPolicies:
+      autoScaler: true
+      cloudWatch: true
+      ebs: true
+      fsx: true
+      efs: true
 
 EOF
 
-eksctl create cluster -f eksworkshop.yaml
 
-aws eks --region ${AWS_REGION} update-kubeconfig --name ${CLUSTER2_NAME}
-
-kubectl get nodes
-
-# STACK_NAME=$(eksctl get nodegroup --cluster ${CLUSTER2_NAME} -o json | jq -r '.[].StackName')
-# ROLE_NAME=$(aws cloudformation describe-stack-resources --stack-name $STACK_NAME | jq -r '.StackResources[] | select(.ResourceType=="AWS::IAM::Role") | .PhysicalResourceId')
-# export_to_env ROLE_NAME ${ROLE_NAME}
-
-eksctl utils associate-iam-oidc-provider --cluster ${CLUSTER2_NAME} --approve --region $AWS_REGION
-
-#log_text "Success" "Completed EKS cluster setup..."
-
-# ROLE_ARN=$(aws iam get-role --role-name WSParticipantRole --query Role.Arn --output text) || true
-
-# eksctl create iamidentitymapping --cluster ${CLUSTER2_NAME} --arn ${ROLE_ARN} --group system:masters --username admin || true
-
-kubectl config get-contexts -o name
-
-source ~/.bash_profile
-
-#context=$(kubectl config get-contexts -o name | grep cluster/${CLUSTER2_NAME})  || true
-
-#kubectl config rename-context ${context} ${CLUSTER2_NAME}  || true
-
-#echo "Added console credentials for console access"
+cd ~/environment/vpclattice/cloud9/
+eksctl create cluster -f lattice_eks01.yaml --dry-run

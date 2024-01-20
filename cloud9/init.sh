@@ -98,9 +98,5 @@ helm repo add stable https://charts.helm.sh/stable
 helm repo add bitnami https://charts.bitnami.com/bitnami
 helm repo update
 
-source /etc/bash_completion
-source <(kubectl completion bash)
-source /etc/bash_completion
-
 source ~/.bash_profile
 
