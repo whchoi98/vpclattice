@@ -8,8 +8,8 @@ echo "export VPC_NAME=${VPC_NAME}" | tee -a ~/.bash_profile
 echo "export CLUSTER2_NAME=c2" | tee -a ~/.bash_profile
 export LATTICE_DOMAIN_NAME="lattice.io"
 echo "export LATTICE_DOMAIN_NAME=${LATTICE_DOMAIN_NAME}" | tee -a ~/.bash_profile
-echo "export EKS_VERSION="1.25" | tee -a ~/.bash_profile
-echo "export NODE_INSTANCE_TYPE="m5.xlarge" | tee -a ~/.bash_profile
+echo "export EKS_VERSION='1.25'" | tee -a ~/.bash_profile
+echo "export NODE_INSTANCE_TYPE='m5.xlarge'" | tee -a ~/.bash_profile
 
 
 #echo "export VPC2_NAME='LatticeWorkshop Rates VPC' | tee -a ~/.bash_profile
