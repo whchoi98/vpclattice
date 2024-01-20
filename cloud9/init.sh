@@ -46,9 +46,9 @@ echo export AWS_REGION=$(curl -s 169.254.169.254/latest/dynamic/instance-identit
 
 echo export ACCOUNT_ID=$(aws sts get-caller-identity --output text --query Account)  >> ~/env.sh
 
-export C9_IDS=($(aws cloud9 list-environments | jq -r '.environmentIds | join(" ")'))
-export CLOUD9_ID=($(aws cloud9 describe-environments --environment-ids ${C9_IDS} | jq -r '.environments[] | select(.name == "LatticeCloud9") | .id'))
+#export C9_IDS=($(aws cloud9 list-environments | jq -r '.environmentIds | join(" ")'))
+#export CLOUD9_ID=($(aws cloud9 describe-environments --environment-ids ${C9_IDS} | jq -r '.environments[] | select(.name == "LatticeCloud9") | .id'))
 
-echo export CLOUD9_ID=${C9_IDS} >> ~/env.sh
+#echo export CLOUD9_ID=${C9_IDS} >> ~/env.sh
 
 log_text "Success" "Installed of CLI tools successful"
