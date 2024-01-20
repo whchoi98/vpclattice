@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source ./helper.sh
+#source ./helper.sh
 
 CLUSTER_NAME=c1
 NODE_INSTANCE_TYPE="m5.large"
@@ -11,7 +11,7 @@ AZS=($(aws ec2 describe-availability-zones --query 'AvailabilityZones[].ZoneName
 CLUSTER_VPC_ID=$(aws ec2 describe-vpcs --filters Name=tag:Name,"Values=LatticeWorkshop Clients VPC" | jq -r '.Vpcs[].VpcId')
 
 echo $CLUSTER_VPC_ID
-
+export ACCOUNT_ID=$(aws sts get-caller-identity --region ap-northeast-2 --output text --query Account)
 export PUBLIC_SUBNETS_LIST=($(aws ec2 describe-subnets --filters Name=vpc-id,Values=$CLUSTER_VPC_ID --query 'Subnets[?MapPublicIpOnLaunch==`false`].{AZ: AvailabilityZone, SUBNET: SubnetId}' --output json))
 export PRIVATE_SUBNETS_LIST=($(aws ec2 describe-subnets --filters Name=vpc-id,Values=$CLUSTER_VPC_ID --query 'Subnets[?MapPublicIpOnLaunch==`true`].{AZ: AvailabilityZone, SUBNET: SubnetId}' --output json))
 
@@ -118,14 +118,16 @@ eksctl utils associate-iam-oidc-provider --cluster ${CLUSTER_NAME} --approve --r
 
 log_text "Success" "Completed EKS cluster setup..."
 
-ROLE_ARN=$(aws iam get-role --role-name WSParticipantRole --query Role.Arn --output text) || true
+# ROLE_ARN=$(aws iam get-role --role-name WSParticipantRole --query Role.Arn --output text) || true
 
-eksctl create iamidentitymapping --cluster ${CLUSTER_NAME} --arn ${ROLE_ARN} --group system:masters --username admin || true
+# eksctl create iamidentitymapping --cluster ${CLUSTER_NAME} --arn ${ROLE_ARN} --group system:masters --username admin || true
 
 kubectl config get-contexts -o name
 
-context=$(kubectl config get-contexts -o name | grep cluster/${CLUSTER_NAME})  || true
+source ~/.bash_profile
 
-kubectl config rename-context ${context} ${CLUSTER_NAME}  || true
+#context=$(kubectl config get-contexts -o name | grep cluster/${CLUSTER_NAME})  || true
 
-echo "Added console credentials for console access"
+#kubectl config rename-context ${context} ${CLUSTER_NAME}  || true
+
+#echo "Added console credentials for console access"

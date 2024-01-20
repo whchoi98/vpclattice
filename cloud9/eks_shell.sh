@@ -4,7 +4,7 @@
 
 cd ~/environment/
 #VPC ID export
-export vpc_ID=$(aws ec2 describe-vpcs --filters Name=tag:Name,Values=eksworkshop | jq -r '.Vpcs[].VpcId')
+export vpc_ID=$(aws ec2 describe-vpcs --filters Name=tag:Name,"Values=LatticeWorkshop Clients VPC" | jq -r '.Vpcs[].VpcId')
 echo $vpc_ID
 
 #Subnet ID, CIDR, Subnet Name export
