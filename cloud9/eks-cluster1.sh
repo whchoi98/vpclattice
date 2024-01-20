@@ -117,7 +117,7 @@ kubectl get nodes
 
 eksctl utils associate-iam-oidc-provider --cluster ${CLUSTER1_NAME} --approve --region $AWS_REGION
 
-log_text "Success" "Completed EKS cluster setup..."
+#log_text "Success" "Completed EKS cluster setup..."
 
 # ROLE_ARN=$(aws iam get-role --role-name WSParticipantRole --query Role.Arn --output text) || true
 
