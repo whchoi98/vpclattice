@@ -3,7 +3,7 @@
 echo "export ACCOUNT_ID=$(aws sts get-caller-identity --region ap-northeast-2 --output text --query Account)" | tee -a ~/.bash_profile
 echo "export AWS_REGION=$(curl -s 169.254.169.254/latest/dynamic/instance-identity/document | jq -r '.region')" | tee -a ~/.bash_profile
 echo "export CLUSTER1_NAME=c1" | tee -a ~/.bash_profile
-export VPC_NAME="LatticeWorkshop Clients VPC"
+export VPC_NAME='LatticeWorkshop Clients VPC'
 echo "export VPC_NAME=${VPC_NAME}" | tee -a ~/.bash_profile
 echo "export CLUSTER2_NAME=c2" | tee -a ~/.bash_profile
 export LATTICE_DOMAIN_NAME="lattice.io"
