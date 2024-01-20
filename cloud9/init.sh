@@ -33,11 +33,8 @@ chmod +x ./kubectl
 sudo mv ./kubectl /usr/local/bin/kubectl
 source <(kubectl completion bash)
 echo "source <(kubectl completion bash)" >> ~/.bashrc
-chmod +x ./kubectl
-sudo mv ./kubectl /usr/local/bin/kubectl
 kubectl version --short --client
-source <(kubectl completion bash)
-echo "source <(kubectl completion bash)" >> ~/.bashrc
+source /etc/bash_completion
 
 sudo yum -y install jq gettext bash-completion moreutils
 for command in kubectl jq envsubst aws
@@ -100,6 +97,10 @@ helm version --short
 helm repo add stable https://charts.helm.sh/stable
 helm repo add bitnami https://charts.bitnami.com/bitnami
 helm repo update
+
+source /etc/bash_completion
+source <(kubectl completion bash)
+source /etc/bash_completion
 
 source ~/.bash_profile
 
