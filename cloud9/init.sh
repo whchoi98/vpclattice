@@ -89,7 +89,7 @@ echo "------------------------------------------------------"
 # curl -sSL https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
 
 wget https://get.helm.sh/helm-v3.14.4-linux-amd64.tar.gz
-tar -zxvf helm-v3.13.2-linux-amd64.tar.gz
+tar -zxvf helm-v3.14.4-linux-amd64.tar.gz
 sudo cp linux-amd64/helm /usr/local/bin/helm
 
 helm version --short
