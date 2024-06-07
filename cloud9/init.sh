@@ -28,7 +28,7 @@ yq --version
 echo "------------------------------------------------------"
 
 cd ~
-curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.25.12/bin/linux/amd64/kubectl
+curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.27.13/bin/linux/amd64/kubectl
 chmod +x ./kubectl
 sudo mv ./kubectl /usr/local/bin/kubectl
 source <(kubectl completion bash)
@@ -82,13 +82,13 @@ sudo mv /tmp/eksctl /usr/local/bin
 . <(eksctl completion bash)
 eksctl version
 
-echo "Downloaded and installed helm v3.13.2"
+echo "Downloaded and installed helm v3.14.4"
 
 echo "------------------------------------------------------"
 
 # curl -sSL https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
 
-wget https://get.helm.sh/helm-v3.13.2-linux-amd64.tar.gz
+wget https://get.helm.sh/helm-v3.14.4-linux-amd64.tar.gz
 tar -zxvf helm-v3.13.2-linux-amd64.tar.gz
 sudo cp linux-amd64/helm /usr/local/bin/helm
 
