@@ -3,7 +3,7 @@
 #source ./helper.sh
 
 AZS=($(aws ec2 describe-availability-zones --query 'AvailabilityZones[].ZoneName' --output text --region "$AWS_REGION"))
-echo "export CLUSTER_VPC_ID=$(aws ec2 describe-vpcs --filters Name=tag:Name,Values=$VPC_NAME | jq -r '.Vpcs[].VpcId')" | tee -a ~/.bash_profile
+echo "export CLUSTER2_VPC_ID=$(aws ec2 describe-vpcs --filters Name=tag:Name,Values=$VPC_NAME | jq -r '.Vpcs[].VpcId')" | tee -a ~/.bash_profile
 
 echo "export RATES_PublicSubnet01=$(aws ec2 describe-subnets --filters 'Name=tag:Name,Values=LatticeWorkshop-Rates-PublicSubnet01' | jq -r '.Subnets[].SubnetId')" | tee -a ~/.bash_profile
 echo "export RATES_PublicSubnet02=$(aws ec2 describe-subnets --filters 'Name=tag:Name,Values=LatticeWorkshop-Rates-PublicSubnet02' | jq -r '.Subnets[].SubnetId')" | tee -a ~/.bash_profile
@@ -53,7 +53,7 @@ metadata:
   version: "${EKS_VERSION}"
 
 vpc: 
-  id: ${CLUSTER_VPC_ID}
+  id: ${CLUSTER2_VPC_ID}
   subnets:
     public:
       PublicSubnet01:
