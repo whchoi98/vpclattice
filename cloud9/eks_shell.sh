@@ -30,7 +30,7 @@ echo "export PrivateSubnet03=${PrivateSubnet03}" | tee -a ~/.bash_profile
 
 # eks cluster 환경변수 생성 
 export ekscluster_name="eksworkshop"
-export eks_version="1.25"
+export eks_version="1.27"
 export instance_type="m5.xlarge"
 export public_selfmgmd_node="frontend-workloads"
 export private_selfmgmd_node="backend-workloads"
